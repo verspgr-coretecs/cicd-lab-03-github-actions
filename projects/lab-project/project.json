@@ -3,5 +3,5 @@
   "description": "Sample Ignition project — the subject of the Lab 03 GitHub Actions (CI) exercises.",
   "enabled": true,
   "inheritable": false,
-  "parent": "",,
+  "parent": ""
 }
