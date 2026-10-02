@@ -502,11 +502,13 @@ nothing to write. Fire it, then flip to the runner's logs:
 gh workflow run runner-demo.yml   # then watch the docker logs terminal
 ```
 
-The steps run live in `docker logs`, on your machine, not GitHub's infra. The `shellcheck`
-step **fails — command not found**: a bare runner only has what *you* put on it, and "works on
-`ubuntu-latest`" was an assumption GitHub's image quietly satisfied. That failure *is* the
-lesson. After the one job, the ephemeral container exits and the runner drops off the Runners
-tab.
+The job runs live in `docker logs`, on your machine, not GitHub's infra. It is deliberately
+a single `echo`, so it **goes green** — the proof is the hostname in the log: your container's,
+not a GitHub machine's. The labels did the routing. Keep in mind a bare runner only has what
+*you* put on it: the moment a job needs shellcheck or Python, "works on `ubuntu-latest`" is an
+assumption GitHub's image quietly satisfied and yours won't — Labs 04-05 install a real
+toolchain for exactly that reason. After the one job, the ephemeral container exits and the
+runner drops off the Runners tab.
 
 **3 — Tear it down (mandatory if you ran it).** Cleanup *is* the exercise — a lingering runner
 on a public repo is the standing version of the fork-PR risk. The workflow itself is

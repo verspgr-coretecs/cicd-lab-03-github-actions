@@ -27,6 +27,14 @@ is the subject of [Lab 04](https://github.com/mustry-academy/cicd-lab-04-ignitio
 - The [GitHub CLI](https://cli.github.com/) (`gh`), authenticated (`gh auth status`) — Part 3's
   runner demo mints its short-lived registration token through it; no personal access token needed.
 
+
+> **WSL2 (Windows): keep the clone in your Linux home (`~/…`), never `/mnt/c/…`.**
+> On the Windows filesystem your Windows user, your WSL user and the gateway's
+> container user are three different identities, so file ownership breaks in ways
+> `chown` cannot fix and you end up reaching for `sudo` (which makes it worse).
+> `scripts/setup.sh` refuses to run from there, and never needs `sudo`.
+> See [`docs/wsl-setup.md`](./docs/wsl-setup.md).
+
 ## Quick start
 
 ```bash
@@ -119,7 +127,7 @@ A single Ignition 8.3 gateway. Two things to understand about how it's wired:
 ```yaml
 services:
   ignition:
-    image: inductiveautomation/ignition:8.3.6
+    image: inductiveautomation/ignition:8.3.8
     ports: ["8088:8088"]
     volumes:
       - ignition-data:/usr/local/bin/ignition/data        # gateway-owned, self-generated, not in git

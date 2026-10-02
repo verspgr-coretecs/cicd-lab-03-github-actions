@@ -103,6 +103,13 @@ body{
 
 /* code block */
 .code{background:var(--navy);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);margin-top:6px;overflow:auto}
+/* OS tabs on top of a code block */
+.ostabs{display:flex;gap:5px;margin-top:6px}
+.ostab{font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;letter-spacing:.4px;color:var(--txt-faint);background:var(--line);border:none;border-radius:9px 9px 0 0;padding:8px 16px 7px;cursor:pointer}
+.ostab.active{color:#fff;background:var(--navy)}
+.ostabs+.code,.ostabs~.code.ospane{border-top-left-radius:0;margin-top:0}
+.code.ospane{display:none}
+.code.ospane.active{display:block}
 .code pre{font-family:'IBM Plex Mono';font-size:14px;color:#dbe6f5;line-height:1.7}
 .code .cm{color:#7d93ad}
 .code .cmd2{color:var(--peri2)}
@@ -295,7 +302,11 @@ code .
         <div class="step"><div class="ix t">3</div><div class="tx"><b>Reference reading (optional)</b> lives in <span class="inlinecode">docs/validation-and-linters.md</span> and <span class="inlinecode">docs/self-hosted-runners.md</span>: cheat sheets, not homework.</div></div>
       </div>
       <div>
-        <div class="code"><pre><span class="cm"># 2: linters — Debian/Ubuntu/WSL</span>
+        <div class="ostabs" data-ostabs>
+          <button class="ostab" data-os="linux" type="button">Linux / WSL</button>
+          <button class="ostab" data-os="mac" type="button">macOS</button>
+        </div>
+        <div class="code ospane" data-os="linux"><pre><span class="cm"># 2: linters — Debian/Ubuntu/WSL</span>
 sudo apt update
 sudo apt install shellcheck python3-venv python3-pip
 <span class="cm">#    actionlint has no apt package: release binary →</span>
@@ -308,6 +319,17 @@ sudo apt update &amp;&amp; sudo apt install python3.13 python3.13-venv
 <span class="cm"># 2c: venv on that Python, then the pinned tools</span>
 python3.13 -m venv .venv &amp;&amp; source .venv/bin/activate
 python --version        <span class="cm"># verify it's 3.13 inside the venv</span>
+pip install --upgrade pip
+pip install yamllint==1.35.1 ign-lint==0.6.1</pre></div>
+        <div class="code ospane" data-os="mac"><pre><span class="cm"># 2: linters — macOS (Homebrew)</span>
+brew install shellcheck actionlint python@3.12
+
+<span class="cm"># 2b: macOS's bare python3 is 3.9 — too old for ign-lint</span>
+<span class="cm">#     (needs >=3.10,&lt;3.14), so name brew's python3.12 explicitly</span>
+
+<span class="cm"># 2c: venv on that Python, then the pinned tools</span>
+python3.12 -m venv .venv &amp;&amp; source .venv/bin/activate
+python --version        <span class="cm"># verify it's 3.12 inside the venv</span>
 pip install --upgrade pip
 pip install yamllint==1.35.1 ign-lint==0.6.1</pre></div>
         <div class="goal warn-g" style="margin-top:18px">
@@ -344,7 +366,7 @@ docker compose restart
 <span class="cm"># run all five checks · note every finding + its file</span>
 yamllint -c .yamllint.yml . <span class="cm"># YAML style + syntax</span>
 shellcheck scripts/*.sh     <span class="cm"># shell-script bugs</span>
-actionlint                  <span class="cm"># Actions workflows</span>
+actionlint                  <span class="cm"># Actions workflows · actions must be @v4</span>
 <span class="cm"># ign-lint — Perspective views, the one to linger on:</span>
 ign-lint --config rule_config.json \
   --files <span class="cmd2">"projects/**/view.json"</span>
@@ -426,10 +448,10 @@ scripts/validate.sh         <span class="cm"># JSON + code.py parses</span></pre
         <div class="step"><div class="ix p">0</div><div class="tx">Rather do it by hand? The script only runs the <span class="inlinecode">git mv</span> and writes the file below — skip it and type both yourself if you prefer.</div></div>
       </div>
       <div>
-        <div class="code"><pre><span class="cm"># prepare-part2.sh sets the shipped answer aside…</span>
-git mv .github/workflows/ci.yml .github/ci-reference.yml
+        <div class="code"><pre><span class="cm"># sets the shipped answer aside, scaffolds the skeleton</span>
+scripts/prepare-part2.sh
 
-<span class="cm"># …then scaffolds .github/workflows/ci.yml:</span>
+<span class="cm"># what it drops into .github/workflows/ci.yml:</span>
 name: CI
 on: [pull_request]            <span class="cm"># TODO 1: paths + push</span>
 permissions:
@@ -618,19 +640,19 @@ docker logs -f lab03-runner</pre></div>
   <div class="foot"><span>Mustry Academy · CI/CD for Ignition</span><span>Part 3 · optional hands-on 1 of 3 · register</span></div>
 </section>
 
-<!-- 14 · PART 3 · OPTIONAL HANDS-ON 2 · ROUTE & GOTCHA -->
+<!-- 14 · PART 3 · OPTIONAL HANDS-ON 2 · ROUTE & RUN -->
 <section class="slide">
   <div class="topbar">
     <div class="brandrow"><img class="logo-img" src="logos/OriginalDark.png" alt="Mustry Solutions"></div>
     <div class="stage">Part 3 · optional hands-on · try it yourself</div>
   </div>
   <div class="body">
-    <div class="sechead"><span class="num warm">HANDS-ON · 2</span><div><div class="title">Route one job — watch it miss a tool</div><div class="lead">The repo ships a manual workflow that targets your runner by label. Dispatch it, then flip to the logs and watch it run on your own machine.</div></div></div>
+    <div class="sechead"><span class="num warm">HANDS-ON · 2</span><div><div class="title">Route one job to your runner and watch it run locally</div><div class="lead">The repo ships a manual workflow that targets your runner by label. Dispatch it, then flip to the logs and watch it run on your own machine.</div></div></div>
     <div class="cols2">
       <div class="steps">
         <div class="step"><div class="ix t">1</div><div class="tx"><b>Use the shipped workflow.</b> The repo already has <span class="inlinecode">.github/workflows/runner-demo.yml</span> — <span class="inlinecode">runs-on: [self-hosted, local-lab03]</span> routes it to your container, and <span class="inlinecode">workflow_dispatch</span> means only <i>you</i> can trigger it. Nothing to write.</div></div>
         <div class="step"><div class="ix t">2</div><div class="tx"><b>Dispatch it:</b> <span class="inlinecode">gh workflow run runner-demo.yml</span>, then switch to the <span class="inlinecode">docker logs</span> terminal — the steps execute <b>live, locally</b>.</div></div>
-        <div class="step"><div class="ix t">3</div><div class="tx"><b>The gotcha:</b> the <span class="inlinecode">shellcheck</span> step <b>fails — command not found</b>. The runner only has what <i>you</i> put on it; "works on <span class="inlinecode">ubuntu-latest</span>" was an assumption GitHub's image quietly satisfied.</div></div>
+        <div class="step"><div class="ix t">3</div><div class="tx"><b>It goes green:</b> the job is a single <span class="inlinecode">echo</span>, so it always succeeds. The proof is <i>where</i> it ran — the hostname in the log is your container's, not a GitHub machine's. The labels did the routing.</div></div>
         <div class="step"><div class="ix t">4</div><div class="tx"><b>Ephemeral payoff:</b> one job done, the container exits (<span class="inlinecode">--rm</span>) and the runner <b>drops off the Runners tab</b> on its own.</div></div>
       </div>
       <div>
@@ -643,18 +665,17 @@ jobs:
     runs-on: [self-hosted, local-lab03]
     steps:
       - run: echo "ran on $(hostname)"
-      - run: shellcheck --version   <span class="cm"># ← bare runner lacks it</span>
 
 <span class="cm"># dispatch it, then watch the docker logs terminal:</span>
 gh workflow run runner-demo.yml</pre></div>
         <div class="goal warn-g" style="margin-top:16px">
-          <span class="badge">The point</span>
-          <p>The failure <b>is</b> the lesson — don't fix it. Self-hosted means <i>you</i> own the toolchain: install it on the host, or in the workflow. Labs 04-05 do this for real against a gateway.</p>
+          <span class="badge">Worth knowing</span>
+          <p>This job stays green because <span class="inlinecode">echo</span> exists everywhere. A bare runner has <b>only</b> what <i>you</i> install: the moment a job needs shellcheck or Python, self-hosted means <i>you</i> own that toolchain. Labs 04-05 do this for real against a gateway.</p>
         </div>
       </div>
     </div>
   </div>
-  <div class="foot"><span>Mustry Academy · CI/CD for Ignition</span><span>Part 3 · optional hands-on 2 of 3 · route + gotcha</span></div>
+  <div class="foot"><span>Mustry Academy · CI/CD for Ignition</span><span>Part 3 · optional hands-on 2 of 3 · route + run</span></div>
 </section>
 
 <!-- 15 · PART 3 · OPTIONAL HANDS-ON 3 · CLEANUP -->
@@ -828,6 +849,20 @@ window.addEventListener('keydown',e=>{
   if(e.key==='Home'){deck.scrollTo({top:0})}
   if(e.key==='End'){deck.scrollTo({top:slides.length*window.innerHeight})}
 });
+// OS tabs on code blocks: default to macOS on a Mac, Linux everywhere else
+// (Windows students run the lab in WSL, so Windows also gets the Linux tab).
+(function osTabs(){
+  const isMac=/Mac/i.test(navigator.platform||navigator.userAgent);
+  document.querySelectorAll('[data-ostabs]').forEach(bar=>{
+    const scope=bar.parentElement;
+    const show=os=>{
+      bar.querySelectorAll('.ostab').forEach(b=>b.classList.toggle('active',b.dataset.os===os));
+      scope.querySelectorAll('.ospane').forEach(p=>p.classList.toggle('active',p.dataset.os===os));
+    };
+    bar.querySelectorAll('.ostab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.os)));
+    show(isMac?'mac':'linux');
+  });
+})();
 update();
 setTimeout(()=>{hint.style.transition='opacity .6s';hint.style.opacity='0'},4200);
 </script>

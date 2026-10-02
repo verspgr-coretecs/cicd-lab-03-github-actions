@@ -9,8 +9,18 @@
 
 set -euo pipefail
 
+
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
+
+# ---- Host preflight (WSL/permissions) --------------------------------------
+# Refuses a sudo'd run, verifies the repo is not on the Windows filesystem
+# (/mnt/c), reclaims root-owned leftovers, and exports LAB_GID so the
+# gateway container writes files this user can still edit. See
+# scripts/preflight.sh and docs/wsl-setup.md.
+# shellcheck source=preflight.sh disable=SC1091
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/preflight.sh"
+lab_preflight
 
 GREEN=$'\033[0;32m'; YELLOW=$'\033[1;33m'; RED=$'\033[0;31m'; NC=$'\033[0m'
 [ -n "${NO_COLOR:-}" ] && { GREEN=""; YELLOW=""; RED=""; NC=""; }
@@ -35,6 +45,9 @@ if [ ! -f .env ]; then
   echo "${YELLOW}.env not found — copying from .env.example.${NC}"
   cp .env.example .env
 fi
+# Record LAB_GID in the fresh .env so a later manual `docker compose up -d`
+# (fresh terminal, no export) keeps the gateway in your group. See preflight.sh.
+pf_persist_lab_gid
 
 # ---- start ----------------------------------------------------------------
 echo "${GREEN}Starting the Ignition gateway...${NC}"
